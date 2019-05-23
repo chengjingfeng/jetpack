@@ -3,16 +3,17 @@
  */
 import React from 'react';
 import { translate as __ } from 'i18n-calypso';
-import analytics from 'lib/analytics';
-import { getPlanClass } from 'lib/plans/constants';
 import { connect } from 'react-redux';
 
 /**
  * Internal dependencies
  */
-import { imagePath } from 'constants/urls';
-import { getUpgradeUrl, showBackups } from 'state/initial-state';
+import analytics from 'lib/analytics';
+import ChecklistCta from './checklist-cta';
 import ChecklistProgress from './checklist-progress-card';
+import { getPlanClass } from 'lib/plans/constants';
+import { getUpgradeUrl, getSiteRawUrl, showBackups } from 'state/initial-state';
+import { imagePath } from 'constants/urls';
 
 class MyPlanHeader extends React.Component {
 	trackLearnMore = () => {
@@ -23,9 +24,20 @@ class MyPlanHeader extends React.Component {
 		} );
 	};
 
+	trackChecklistCtaClick = () =>
+		void analytics.tracks.recordEvent(
+			'jetpack_myplan_headerchecklistcta_click',
+			this.props.plan
+				? {
+						plan: this.props.plan,
+				  }
+				: undefined
+		);
+
 	render() {
+		const { plan, siteSlug } = this.props;
 		let planCard = '';
-		switch ( getPlanClass( this.props.plan ) ) {
+		switch ( getPlanClass( plan ) ) {
 			case 'is-free-plan':
 				planCard = (
 					<div className="jp-landing__plan-card">
@@ -43,6 +55,7 @@ class MyPlanHeader extends React.Component {
 							<p className="jp-landing__plan-features-text">
 								{ __( 'Get started with hassle-free design, stats, and performance tools.' ) }
 							</p>
+							<ChecklistCta onClick={ this.trackChecklistCtaClick } siteSlug={ siteSlug } />
 						</div>
 					</div>
 				);
@@ -71,6 +84,7 @@ class MyPlanHeader extends React.Component {
 									{ __( 'Spam filtering and priority support.' ) }
 								</p>
 							) }
+							<ChecklistCta onClick={ this.trackChecklistCtaClick } siteSlug={ siteSlug } />
 						</div>
 					</div>
 				);
@@ -86,7 +100,7 @@ class MyPlanHeader extends React.Component {
 								alt={ __( 'Jetpack Premium Plan' ) }
 							/>
 						</div>
-						<div className="jp-landing__plan-iconcard-current">
+						<div className="jp-landing__plan-card-current">
 							<h3 className="jp-landing__plan-features-title">
 								{ __( 'Welcome to Jetpack Premium' ) }
 							</h3>
@@ -95,6 +109,7 @@ class MyPlanHeader extends React.Component {
 									'Full security suite, marketing and revenue automation tools, unlimited video hosting, and priority support.'
 								) }
 							</p>
+							<ChecklistCta onClick={ this.trackChecklistCtaClick } siteSlug={ siteSlug } />
 						</div>
 					</div>
 				);
@@ -119,6 +134,7 @@ class MyPlanHeader extends React.Component {
 									'Full security suite, marketing and revenue automation tools, unlimited video hosting, unlimited themes, enhanced search, and priority support.'
 								) }
 							</p>
+							<ChecklistCta onClick={ this.trackChecklistCtaClick } siteSlug={ siteSlug } />
 						</div>
 					</div>
 				);
@@ -139,13 +155,14 @@ class MyPlanHeader extends React.Component {
 		return (
 			<>
 				<div>{ planCard }</div>
-				<ChecklistProgress />
+				<ChecklistProgress plan={ plan } />
 			</>
 		);
 	}
 }
 export default connect( state => {
 	return {
+		siteSlug: getSiteRawUrl( state ),
 		showBackups: showBackups( state ),
 		plansMainTopUpgradeUrl: getUpgradeUrl( state, 'plans-main-top' ),
 	};

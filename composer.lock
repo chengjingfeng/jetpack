@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4b05a876972cb9689edf20bcc2b8dda7",
+    "content-hash": "359242be073a13baaa32ecbf8432f9cf",
     "packages": [
         {
             "name": "automattic/jetpack-connection",
@@ -12,16 +12,22 @@
             "dist": {
                 "type": "path",
                 "url": "./packages/jetpack-connection",
-                "reference": "50382005f1c2d410e87816df0083d9dee35c87f0"
+                "reference": "a03b8cfa0719d8b6b1c60f99e618312f03db2f94"
             },
             "require-dev": {
+                "10up/wp_mock": "0.4.2",
                 "phpunit/phpunit": "7.*.*"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Jetpack\\V7\\Connection\\": "lib/"
+                    "Jetpack\\V7\\Connection\\": "lib"
                 }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ]
             },
             "license": [
                 "GPL-2.0-or-later"
@@ -32,17 +38,50 @@
             }
         },
         {
+            "name": "automattic/jetpack-logo",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "./packages/logo",
+                "reference": "b9ada94a1527c54a2daa3c3b7695a6f95e5a9715"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Jetpack\\Assets\\": "src/"
+                }
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "A logo for Jetpack",
+            "transport-options": {
+                "symlink": true
+            }
+        },
+        {
             "name": "automattic/jetpack-options",
             "version": "1.0.0",
             "dist": {
                 "type": "path",
                 "url": "./packages/jetpack-options",
-                "reference": "71ec9d2496281cac58d7419f046c9e64a448c5a2"
+                "reference": "698850806b40eae41ce6dfa46d9a6e88b8873657"
             },
             "require-dev": {
+                "10up/wp_mock": "0.4.2",
                 "phpunit/phpunit": "7.*.*"
             },
             "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Jetpack\\V7\\Options\\": "lib"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ]
+            },
             "license": [
                 "GPL-2.0-or-later"
             ],
@@ -496,16 +535,16 @@
         },
         {
             "name": "wp-coding-standards/wpcs",
-            "version": "2.1.0",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards.git",
-                "reference": "8c7a2e7682de9ef5955251874b639deda51ef470"
+                "reference": "bd9c33152115e6741e3510ff7189605b35167908"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/WordPress-Coding-Standards/WordPress-Coding-Standards/zipball/8c7a2e7682de9ef5955251874b639deda51ef470",
-                "reference": "8c7a2e7682de9ef5955251874b639deda51ef470",
+                "url": "https://api.github.com/repos/WordPress-Coding-Standards/WordPress-Coding-Standards/zipball/bd9c33152115e6741e3510ff7189605b35167908",
+                "reference": "bd9c33152115e6741e3510ff7189605b35167908",
                 "shasum": ""
             },
             "require": {
@@ -537,7 +576,7 @@
                 "standards",
                 "wordpress"
             ],
-            "time": "2019-04-08T10:53:57+00:00"
+            "time": "2019-05-21T02:50:00+00:00"
         }
     ],
     "aliases": [],

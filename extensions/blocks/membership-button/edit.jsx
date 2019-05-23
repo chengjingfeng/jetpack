@@ -5,7 +5,7 @@
 import classnames from 'classnames';
 import SubmitButton from '../../shared/submit-button';
 import apiFetch from '@wordpress/api-fetch';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { trimEnd } from 'lodash';
 import formatCurrency, { getCurrencyDefaults } from '@automattic/format-currency';
 
@@ -42,6 +42,8 @@ class MembershipsButtonEdit extends Component {
 			connected: API_STATE_LOADING,
 			connectURL: null,
 			addingMembershipAmount: PRODUCT_NOT_ADDING,
+			shouldUpgrade: false,
+			upgradeURL: '',
 			products: [],
 			editedProductCurrency: 'USD',
 			editedProductPrice: 5,
@@ -69,12 +71,23 @@ class MembershipsButtonEdit extends Component {
 		const fetch = { path, method };
 		apiFetch( fetch ).then(
 			result => {
+				if (
+					result.errors &&
+					Object.values( result.errors ) &&
+					Object.values( result.errors )[ 0 ][ 0 ]
+				) {
+					this.setState( { connected: null, connectURL: API_STATE_NOTCONNECTED } );
+					this.onError( Object.values( result.errors )[ 0 ][ 0 ] );
+					return;
+				}
 				const connectURL = result.connect_url;
 				const products = result.products;
+				const shouldUpgrade = result.should_upgrade_to_access_memberships;
+				const upgradeURL = result.upgrade_url;
 				const connected = result.connected_account_id
 					? API_STATE_CONNECTED
 					: API_STATE_NOTCONNECTED;
-				this.setState( { connected, connectURL, products } );
+				this.setState( { connected, connectURL, products, shouldUpgrade, upgradeURL } );
 			},
 			result => {
 				const connectURL = null;
@@ -143,15 +156,32 @@ class MembershipsButtonEdit extends Component {
 							title: result.title,
 							interval: result.interval,
 							price: result.price,
+							currency: result.currency,
 						},
 					] ),
 				} );
+				// After successful adding of product, we want to select it. Presumably that is the product user wants.
+				this.setMembershipAmount( result.id );
 			},
 			result => {
 				this.setState( { addingMembershipAmount: PRODUCT_FORM } );
 				this.onError( result.message );
 			}
 		);
+	};
+
+	renderAmount = product => {
+		const amount = formatCurrency( parseFloat( product.price ), product.currency );
+		if ( product.interval === '1 month' ) {
+			return sprintf( __( '%s / month', 'jetpack' ), amount );
+		}
+		if ( product.interval === '1 year' ) {
+			return sprintf( __( '%s / year', 'jetpack' ), amount );
+		}
+		if ( product.interval === 'one-time' ) {
+			return amount;
+		}
+		return sprintf( __( '%s / %s', 'jetpack' ), amount, product.interval );
 	};
 
 	renderAddMembershipAmount = () => {
@@ -190,6 +220,7 @@ class MembershipsButtonEdit extends Component {
 						onChange={ this.handlePriceChange }
 						placeholder={ formatCurrency( 0, this.state.editedProductCurrency ) }
 						required
+						min="5.00"
 						step="1"
 						type="number"
 						value={ this.state.editedProductPrice || '' }
@@ -262,7 +293,7 @@ class MembershipsButtonEdit extends Component {
 					key={ product.id }
 					onClick={ () => this.setMembershipAmount( product.id ) }
 				>
-					{ formatCurrency( parseFloat( product.price ), product.currency ) }
+					{ this.renderAmount( product ) }
 				</Button>
 			) ) }
 		</div>
@@ -286,11 +317,11 @@ class MembershipsButtonEdit extends Component {
 			<InspectorControls>
 				<PanelBody title={ __( 'Product', 'jetpack' ) }>
 					<SelectControl
-						label="Membership plan"
+						label={ __( 'Membership plan', 'jetpack' ) }
 						value={ this.props.attributes.planId }
 						onChange={ this.setMembershipAmount }
 						options={ this.state.products.map( product => ( {
-							label: formatCurrency( parseFloat( product.price ), product.currency ),
+							label: this.renderAmount( product ),
 							value: product.id,
 							key: product.id,
 						} ) ) }
@@ -299,6 +330,7 @@ class MembershipsButtonEdit extends Component {
 			</InspectorControls>
 		);
 		const blockClasses = classnames( className, [
+			'wp-block-button__link',
 			'components-button',
 			'is-primary',
 			'is-button',
@@ -314,6 +346,24 @@ class MembershipsButtonEdit extends Component {
 		return (
 			<Fragment>
 				{ this.props.noticeUI }
+				{ this.state.shouldUpgrade && (
+					<Placeholder
+						icon={ <BlockIcon icon={ icon } /> }
+						label={ __( 'Memberships', 'jetpack' ) }
+						notices={ notices }
+					>
+						<div className="components-placeholder__instructions wp-block-jetpack-membership-button">
+							{ __( "You'll need to upgrade your plan to use the Membership Button.", 'jetpack' ) }
+							<br />
+							<br />
+							<Button isDefault isLarge href={ this.state.upgradeURL } target="_blank">
+								{ __( 'Upgrade Your Plan', 'jetpack' ) }
+							</Button>
+							<br />
+							{ this.renderDisclaimer() }
+						</div>
+					</Placeholder>
+				) }
 				{ ( connected === API_STATE_LOADING ||
 					this.state.addingMembershipAmount === PRODUCT_FORM_SUBMITTED ) &&
 					! this.props.attributes.planId && (
@@ -321,32 +371,35 @@ class MembershipsButtonEdit extends Component {
 							<Spinner />
 						</Placeholder>
 					) }
-				{ ! this.props.attributes.planId && connected === API_STATE_NOTCONNECTED && (
-					<Placeholder
-						icon={ <BlockIcon icon={ icon } /> }
-						label={ __( 'Memberships', 'jetpack' ) }
-						notices={ notices }
-					>
-						<div className="components-placeholder__instructions wp-block-jetpack-membership-button">
-							{ __(
-								'In order to start selling Membership plans, you have to connect to Stripe:',
-								'jetpack'
-							) }
-							<br />
-							<br />
-							<Button isDefault isLarge href={ connectURL } target="_blank">
-								{ __( 'Connect to Stripe or set up an account', 'jetpack' ) }
-							</Button>
-							<br />
-							<br />
-							<Button isLink onClick={ this.apiCall }>
-								{ __( 'Re-check Connection', 'jetpack' ) }
-							</Button>
-							{ this.renderDisclaimer() }
-						</div>
-					</Placeholder>
-				) }
-				{ ! this.props.attributes.planId &&
+				{ ! this.state.shouldUpgrade &&
+					! this.props.attributes.planId &&
+					connected === API_STATE_NOTCONNECTED && (
+						<Placeholder
+							icon={ <BlockIcon icon={ icon } /> }
+							label={ __( 'Memberships', 'jetpack' ) }
+							notices={ notices }
+						>
+							<div className="components-placeholder__instructions wp-block-jetpack-membership-button">
+								{ __(
+									'In order to start selling Membership plans, you have to connect to Stripe:',
+									'jetpack'
+								) }
+								<br />
+								<br />
+								<Button isDefault isLarge href={ connectURL } target="_blank">
+									{ __( 'Connect to Stripe or set up an account', 'jetpack' ) }
+								</Button>
+								<br />
+								<br />
+								<Button isLink onClick={ this.apiCall }>
+									{ __( 'Re-check Connection', 'jetpack' ) }
+								</Button>
+								{ this.renderDisclaimer() }
+							</div>
+						</Placeholder>
+					) }
+				{ ! this.state.shouldUpgrade &&
+					! this.props.attributes.planId &&
 					connected === API_STATE_CONNECTED &&
 					products.length === 0 && (
 						<Placeholder
@@ -363,7 +416,8 @@ class MembershipsButtonEdit extends Component {
 							</div>
 						</Placeholder>
 					) }
-				{ ! this.props.attributes.planId &&
+				{ ! this.state.shouldUpgrade &&
+					! this.props.attributes.planId &&
 					this.state.addingMembershipAmount !== PRODUCT_FORM_SUBMITTED &&
 					connected === API_STATE_CONNECTED &&
 					products.length > 0 && (

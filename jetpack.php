@@ -15,7 +15,7 @@
 require plugin_dir_path( __FILE__ ) . '/vendor/autoload.php';
 
 define( 'JETPACK__MINIMUM_WP_VERSION', '5.1' );
-define( 'JETPACK__MINIMUM_PHP_VERSION', '5.3' );
+define( 'JETPACK__MINIMUM_PHP_VERSION', '5.3.2' );
 
 define( 'JETPACK__VERSION',            '7.4-alpha' );
 define( 'JETPACK_MASTER_USER',         true );
@@ -92,6 +92,16 @@ function jetpack_admin_unsupported_wp_notice() { ?>
 }
 
 if ( version_compare( $GLOBALS['wp_version'], JETPACK__MINIMUM_WP_VERSION, '<' ) ) {
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log(
+			sprintf(
+				/* translators: Placeholders are numbers, versions of WordPress in use on the site, and required by WordPress. */
+				esc_html__( 'Your version of WordPress (%1$s) is lower than the version required by Jetpack (%2$s). Please update WordPress to continue enjoying Jetpack.', 'jetpack' ),
+				$GLOBALS['wp_version'],
+				JETPACK__MINIMUM_WP_VERSION
+			)
+		);
+	}
 	add_action( 'admin_notices', 'jetpack_admin_unsupported_wp_notice' );
 	return;
 }
@@ -120,6 +130,27 @@ function jetpack_admin_unsupported_php_notice() { ?>
 	<?php
 }
 
+/**
+ * Outputs an admin notice for folks running Jetpack without having run composer install.
+ *
+ * @since 7.4.0
+ */
+function jetpack_admin_missing_autoloader() { ?>
+	<div class="notice notice-error is-dismissible">
+		<p>
+		<?php
+		printf(
+			/* translators: Placeholder is a link to a support document. */
+			__( 'Your installation of Jetpack is incomplete. If you installed Jetpack from GitHub, please refer to <a href="%1$s" target="_blank" rel="noopener noreferrer">this document</a> to set up your development environment.', 'jetpack' ),
+			esc_url( 'https://github.com/Automattic/jetpack/blob/master/docs/development-environment.md' )
+		);
+		?>
+		</p>
+	</p>
+	</div>
+	<?php
+}
+
 if ( version_compare( phpversion(), JETPACK__MINIMUM_PHP_VERSION, '<' ) ) {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log(
@@ -134,6 +165,25 @@ if ( version_compare( phpversion(), JETPACK__MINIMUM_PHP_VERSION, '<' ) ) {
 	add_action( 'admin_notices', 'jetpack_admin_unsupported_php_notice' );
 	return;
 }
+
+// Load all the packages.
+$jetpack_autoloader = JETPACK__PLUGIN_DIR . '/vendor/autoload.php';
+if ( is_readable( $jetpack_autoloader ) ) {
+	require $jetpack_autoloader;
+} else {
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log(
+			sprintf(
+				/* translators: Placeholder is a link to a support document. */
+				__( 'Your installation of Jetpack is incomplete. If you installed Jetpack from GitHub, please refer to <a href="%1$s" target="_blank" rel="noopener noreferrer">this document</a> to set up your development environment.', 'jetpack' ),
+				esc_url( 'https://github.com/Automattic/jetpack/blob/master/docs/development-environment.md' )
+			)
+		);
+	}
+	add_action( 'admin_notices', 'jetpack_admin_missing_autoloader' );
+	return;
+}
+
 
 add_filter( 'jetpack_require_lib_dir', 'jetpack_require_lib_dir' );
 add_filter( 'jetpack_should_use_minified_assets', 'jetpack_should_use_minified_assets', 9 );
