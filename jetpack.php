@@ -155,7 +155,7 @@ if ( version_compare( phpversion(), JETPACK__MINIMUM_PHP_VERSION, '<' ) ) {
 }
 
 // Load all the packages.
-$jetpack_autoloader = JETPACK__PLUGIN_DIR . '/vendor/autoload.php';
+$jetpack_autoloader = JETPACK__PLUGIN_DIR . '/vendor/autoload_packages.php';
 if ( is_readable( $jetpack_autoloader ) ) {
 	require $jetpack_autoloader;
 } else {
