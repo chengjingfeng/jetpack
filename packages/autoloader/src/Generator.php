@@ -1,5 +1,5 @@
 <?php
-
+// phpcs:ignoreFile -- this is not a core file
 /**
  * Custom Autoloader Generator
  * Responsible for creating the custom autoloader (autoload_packages.php)
@@ -7,15 +7,9 @@
  *
  * These hooks needs to be added to your project's (WordPress plugin or theme) composer.json file.
  * "scripts": {
-	"post-install-cmd": [
-		"Jetpack\\Autoload\\Generator::dump"
-		],
-	"post-update-cmd": [
-		"Jetpack\\Autoload\\Generator::dump"
-		],
-	"post-autoload-dump": [
-		"Jetpack\\Autoload\\Generator::dump"
-		]
+	"post-install-cmd": [ "Jetpack\\Autoload\\Generator::dump" ],
+	"post-update-cmd": [ "Jetpack\\Autoload\\Generator::dump" ],
+	"post-autoload-dump": [ "Jetpack\\Autoload\\Generator::dump" ]
 	}
  */
 
