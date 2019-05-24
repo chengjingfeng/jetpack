@@ -30,13 +30,13 @@ In your project's `composer.json`, add the following lines:
     },
     "scripts": {
         "post-install-cmd": [
-            "Jetpack\\Autoload\\Generator::dump"
+            "Jetpack\\Autoloader\\Generator::dump"
         ],
         "post-update-cmd": [
-            "Jetpack\\Autoload\\Generator::dump"
+            "Jetpack\\Autoloader\\Generator::dump"
         ],
         "post-autoload-dump": [
-            "Jetpack\\Autoload\\Generator::dump"
+            "Jetpack\\Autoloader\\Generator::dump"
         ]
     }
 }
